@@ -22,8 +22,13 @@ public class SentinelGame extends Application {
     private int selectedCol = -1;
     private int selectedRow = -1;
     private PieceInfo selectedPiece = null;
+    private boolean isWhiteTurn = true;
+    private int[][] pawnFirstMove = new int[][]{
+            {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 2}, {2, 3}, {3, 2}, {3, 3}, {4, 2}, {4, 3}, {5, 2}, {5, 3}, {6, 2}, {6, 3}, {7, 2}, {7, 3}, {8, 2}, {8, 3}, {9, 2}, {9, 3}
+    };
 
     GridPane board = getGameBoard();
+    private PieceInfo targetCellPiece;
 
     @Override public void start(Stage stage) {
 
@@ -51,18 +56,272 @@ public class SentinelGame extends Application {
                     pieceInfo.getId().startsWith("black")
                 )
             ) {
+                if (
+                    isWhiteTurn && pieceInfo.getId().startsWith("black") ||
+                    !isWhiteTurn && pieceInfo.getId().startsWith("white")
+                ) {
+//                    System.out.println("Not your turn");
+                    return;
+                }
                 selectedPiece = pieceInfo;
                 selectedCol = col;
                 selectedRow = row;
                 highlightCell(col, row);
 
 //                get legal moves
+                String path = "\n";
+                boolean rookXpBlocked = false;
+                boolean rookXnBlocked = false;
+                boolean rookYpBlocked = false;
+                boolean rookYnBlocked = false;
+
+                boolean bishopXpYpBlocked = false;
+                boolean bishopXpYnBlocked = false;
+                boolean bishopXnYpBlocked = false;
+                boolean bishopXnYnBlocked = false;
+
+                boolean queenXpYpBlocked = false;
+                boolean queenXpYnBlocked = false;
+                boolean queenXnYpBlocked = false;
+                boolean queenXnYnBlocked = false;
+                boolean queenXpBlocked = false;
+                boolean queenXnBlocked = false;
+                boolean queenYpBlocked = false;
+                boolean queenYnBlocked = false;
+
+//                pawn, sentinel
+
                 for (int[] move : pieceInfo.getMoves(col, row)) {
                     int moveCol = move[0];
                     int moveRow = move[1];
+                    if (moveCol < 0 || moveCol > 9 || moveRow < 0 || moveRow > 7) continue;
 //                    check if move is valid and block "moveable" from being placed
-                    highlightMoveables(moveCol, moveRow);
+                    PieceInfo targetCellPiece = getPieceByCordinates(moveCol, moveRow);
+                    path += "- " + targetCellPiece.getName() + " " + moveCol + " " + moveRow + " \n";
+
+                    switch (selectedPiece.getName()) {
+                        case "king":
+                        case "knight":
+                            if (targetCellPiece.getName().equals("empty")) {
+                                markMoveableCell(moveCol, moveRow);
+                            } else if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                markMoveableCell(moveCol, moveRow);
+                            }
+                            break;
+                        case "rook":
+                            if (moveCol == col) {
+                                if (moveRow > row) {
+                                    if (rookYpBlocked) {
+                                        break;
+                                    }
+                                    if (targetCellPiece.getName().equals("empty")) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    } else {
+                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                            markMoveableCell(moveCol, moveRow);
+                                        }
+                                        rookYpBlocked = true;
+                                    }
+                                } else {
+                                    if (rookYnBlocked) {
+                                        break;
+                                    }
+                                    if (targetCellPiece.getName().equals("empty")) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    } else {
+                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                            markMoveableCell(moveCol, moveRow);
+                                        }
+                                        rookYnBlocked = true;
+                                    }
+                                }
+                            } else if (moveRow == row) {
+                                if (moveCol > col) {
+                                    if (rookXpBlocked) {
+                                        break;
+                                    }
+                                    if (targetCellPiece.getName().equals("empty")) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    } else {
+                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                            markMoveableCell(moveCol, moveRow);
+                                        }
+                                        rookXpBlocked = true;
+                                    }
+                                } else {
+                                    if (rookXnBlocked) {
+                                        break;
+                                    }
+                                    if (targetCellPiece.getName().equals("empty")) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    } else {
+                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                            markMoveableCell(moveCol, moveRow);
+                                        }
+                                        rookXnBlocked = true;
+                                    }
+                                }
+                            }
+                            break;
+                        case "bishop":
+                            if (moveCol > col && moveRow > row) {
+                                if (bishopXpYpBlocked) {
+                                    break;
+                                }
+                                if (targetCellPiece.getName().equals("empty")) {
+                                    markMoveableCell(moveCol, moveRow);
+                                } else {
+                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    }
+                                    bishopXpYpBlocked = true;
+                                }
+                            } else if (moveCol > col && moveRow < row) {
+                                if (bishopXpYnBlocked) {
+                                    break;
+                                }
+                                if (targetCellPiece.getName().equals("empty")) {
+                                    markMoveableCell(moveCol, moveRow);
+                                } else {
+                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    }
+                                    bishopXpYnBlocked = true;
+                                }
+                            } else if (moveCol < col && moveRow > row) {
+                                if (bishopXnYpBlocked) {
+                                    break;
+                                }
+                                if (targetCellPiece.getName().equals("empty")) {
+                                    markMoveableCell(moveCol, moveRow);
+                                } else {
+                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    }
+                                    bishopXnYpBlocked = true;
+                                }
+                            } else if (moveCol < col && moveRow < row) {
+                                if (bishopXnYnBlocked) {
+                                    break;
+                                }
+                                if (targetCellPiece.getName().equals("empty")) {
+                                    markMoveableCell(moveCol, moveRow);
+                                } else {
+                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    }
+                                    bishopXnYnBlocked = true;
+                                }
+                            }
+                            break;
+                        case "queen":
+                            if (moveCol == col) {
+                                if (moveRow > row) {
+                                    if (queenYpBlocked) {
+                                        break;
+                                    }
+                                    if (targetCellPiece.getName().equals("empty")) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    } else {
+                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                            markMoveableCell(moveCol, moveRow);
+                                        }
+                                        queenYpBlocked = true;
+                                    }
+                                } else {
+                                    if (queenYnBlocked) {
+                                        break;
+                                    }
+                                    if (targetCellPiece.getName().equals("empty")) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    } else {
+                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                            markMoveableCell(moveCol, moveRow);
+                                        }
+                                        queenYnBlocked = true;
+                                    }
+                                }
+                            } else if (moveRow == row) {
+                                if (moveCol > col) {
+                                    if (queenXpBlocked) {
+                                        break;
+                                    }
+                                    if (targetCellPiece.getName().equals("empty")) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    } else {
+                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                            markMoveableCell(moveCol, moveRow);
+                                        }
+                                        queenXpBlocked = true;
+                                    }
+                                } else {
+                                    if (queenXnBlocked) {
+                                        break;
+                                    }
+                                    if (targetCellPiece.getName().equals("empty")) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    } else {
+                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                            markMoveableCell(moveCol, moveRow);
+                                        }
+                                        queenXnBlocked = true;
+                                    }
+                                }
+                            } else if (moveCol > col && moveRow > row) {
+                                if (queenXpYpBlocked) {
+                                    break;
+                                }
+                                if (targetCellPiece.getName().equals("empty")) {
+                                    markMoveableCell(moveCol, moveRow);
+                                } else {
+                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    }
+                                    queenXpYpBlocked = true;
+                                }
+                            } else if (moveCol > col && moveRow < row ) {
+                                if (queenXpYnBlocked) {
+                                    break;
+                                }
+                                if (targetCellPiece.getName().equals("empty")) {
+                                    markMoveableCell(moveCol, moveRow);
+                                } else {
+                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    }
+                                    queenXpYnBlocked = true;
+                                }
+                            } else if (moveCol < col && moveRow > row) {
+                                if (queenXnYpBlocked) {
+                                    break;
+                                }
+                                if (targetCellPiece.getName().equals("empty")) {
+                                    markMoveableCell(moveCol, moveRow);
+                                } else {
+                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    }
+                                    queenXnYpBlocked = true;
+                                }
+                            } else if (moveCol < col && moveRow < row) {
+                                if (queenXnYnBlocked) {
+                                    break;
+                                }
+                                if (targetCellPiece.getName().equals("empty")) {
+                                    markMoveableCell(moveCol, moveRow);
+                                } else {
+                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    }
+                                    queenXnYnBlocked = true;
+                                }
+                            }
+                            break;
+                        default:
+                            markMoveableCell(moveCol, moveRow);
+                    }
                 }
+                System.out.println("move path targetCellPiece: " + path);
             }
             if (selectedPiece != null && pieceInfo.getName().equals("moveable")) {
 //                check for legal moves
@@ -88,7 +347,7 @@ public class SentinelGame extends Application {
             for (int col = 0; col < 10; col++) {
                 Pane square = new Pane();
                 square.setPrefSize(50, 50);
-                square.setStyle((row + col) % 2 == 0 ? "-fx-background-color: white;" : "-fx-background-color: gray;");
+                square.setStyle((row + col) % 2 == 0 ? "-fx-background-color: #5d4037;" : "-fx-background-color: #795548;");
                 board.add(square, col, row);
             }
         }
@@ -160,13 +419,34 @@ public class SentinelGame extends Application {
         }
     }
 
+    private void removePieceById(String id) {
+        for (Node node : board.getChildren()) {
+            if (node.getId() == null) continue;
+            if (node.getId().equals(id)) {
+                System.out.println("Removing piece with ID: " + node.getId());
+                board.getChildren().remove(node);
+                break;
+            }
+        }
+    }
+
     private void movePiece(int col, int row) {
         if (selectedPiece == null) {
             System.out.println("No piece selected");
             return;
         }
         System.out.println("Moving piece: " + selectedPiece.getName() + " from col: " + selectedCol + ", row: " + selectedRow + " to col: " + col + ", row: " + row);
-        removePiece(selectedCol, selectedRow);
+//        if piece is captureable, remove it
+        PieceInfo targetCellPiece = getPieceByCordinates(col, row);
+        if (targetCellPiece.getName().equals("empty") || targetCellPiece.getIsWhite() != selectedPiece.getIsWhite()) {
+            if (!targetCellPiece.getName().equals("empty")) {
+                System.out.println("Capture piece: " + targetCellPiece.getId());
+                removePiece(col, row);
+            }
+        } else {
+            return;
+        }
+        removePieceById(selectedPiece.getId());
         Piece piece = switch (selectedPiece.getName()) {
             case "pawn" -> new Pawn(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
             case "rook" -> new Rook(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
@@ -183,6 +463,7 @@ public class SentinelGame extends Application {
         selectedPiece = null;
         selectedCol = -1;
         selectedRow = -1;
+        isWhiteTurn = !isWhiteTurn;
     }
 
     private void highlightCell(int col, int row) {
@@ -197,7 +478,7 @@ public class SentinelGame extends Application {
         board.add(highlight, col, row);
     }
 
-    private void highlightMoveables(int col, int row) {
+    private void markMoveableCell(int col, int row) {
         Circle circle = new Circle();
         String uniqueId = String.valueOf(System.currentTimeMillis());
         circle.setId("none_moveable_" + uniqueId); // set an ID for the Rectangle
