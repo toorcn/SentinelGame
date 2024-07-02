@@ -42,6 +42,10 @@ class PieceInfo {
         return id.split("_")[2];
     }
 
+    public void updateUniqueId(String newId) {
+        this.id = id.split("_")[0] + "_" + id.split("_")[1] + "_" + newId;
+    }
+
     public int[][] getMoves(int col, int row) {
         int[][] moves = new int[0][0];
         switch (name) {
@@ -63,13 +67,13 @@ class PieceInfo {
             case "pawn":
                 if (isWhite) {
                     moves = new int[][]{
-                            {col, row - 2},
-                            {col, row - 1}, {col + 1, row - 1}, {col - 1, row - 1}
+                            {col, row - 1}, {col + 1, row - 1}, {col - 1, row - 1},
+                            {col, row - 2}
                     };
                 } else {
                     moves = new int[][]{
-                            {col, row + 2},
-                            {col, row + 1}, {col + 1, row + 1}, {col - 1, row + 1}
+                            {col, row + 1}, {col + 1, row + 1}, {col - 1, row + 1},
+                            {col, row + 2}
                     };
                 }
                 break;

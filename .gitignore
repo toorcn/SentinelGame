@@ -36,3 +36,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+src/main/java/com/sentinel/apg39/HelloApplication.java
+src/main/java/com/sentinel/apg39/HelloController.java
+src/main/resources/com/sentinel/apg39/hello-view.fxml
+src/main/resources/images/open-cc-license

@@ -12,7 +12,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,9 +22,6 @@ public class SentinelGame extends Application {
     private int selectedRow = -1;
     private PieceInfo selectedPiece = null;
     private boolean isWhiteTurn = true;
-    private int[][] pawnFirstMove = new int[][]{
-            {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 2}, {2, 3}, {3, 2}, {3, 3}, {4, 2}, {4, 3}, {5, 2}, {5, 3}, {6, 2}, {6, 3}, {7, 2}, {7, 3}, {8, 2}, {8, 3}, {9, 2}, {9, 3}
-    };
 
     GridPane board = getGameBoard();
     private PieceInfo targetCellPiece;
@@ -89,7 +85,9 @@ public class SentinelGame extends Application {
                 boolean queenYpBlocked = false;
                 boolean queenYnBlocked = false;
 
-//                pawn, sentinel
+                boolean pawnYBlocked = false;
+
+//                sentinel
 
                 for (int[] move : pieceInfo.getMoves(col, row)) {
                     int moveCol = move[0];
@@ -317,6 +315,72 @@ public class SentinelGame extends Application {
                                 }
                             }
                             break;
+                        case "pawn":
+//                            pawn is blocked by friendly
+                            if (
+                                selectedCol == moveCol &&
+                                (
+                                    !targetCellPiece.getName().equals("empty") &&
+                                    targetCellPiece.getIsWhite() == isWhiteTurn
+                                )
+                            ) {
+                                pawnYBlocked = true;
+                                break;
+                            }
+//                            pawn is blocked by enemy
+                            if (
+                                pawnYBlocked &&
+                                selectedCol == moveCol &&
+                                (
+                                    selectedRow + 2 == moveRow ||
+                                    selectedRow - 2 == moveRow
+                                )
+                            ) {
+                                break;
+                            }
+
+                            if (selectedPiece.getUniqueId().endsWith("0")) {
+                                if (
+                                    moveCol == selectedCol ||
+                                    (
+                                        !targetCellPiece.getName().equals("empty") &&
+                                        targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()
+                                    )
+                                ) {
+                                    markMoveableCell(moveCol, moveRow);
+                                }
+                                if (
+                                    moveCol == selectedCol &&
+                                    (
+                                        !targetCellPiece.getName().equals("empty") &&
+                                        targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()
+                                    )
+                                ) {
+                                    pawnYBlocked = true;
+                                }
+                            } else {
+                                if (
+                                    moveRow - selectedRow > 1 ||
+                                    moveRow - selectedRow < -1
+                                ) continue;
+                                if (moveCol == selectedCol) {
+                                    if (targetCellPiece.getName().equals("empty")) {
+                                        markMoveableCell(moveCol, moveRow);
+                                    } else {
+                                        break;
+                                    }
+                                } else {
+                                    if (targetCellPiece.getName().equals("empty")) {
+                                        break;
+                                    } else {
+                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                                            markMoveableCell(moveCol, moveRow);
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+
                         default:
                             markMoveableCell(moveCol, moveRow);
                     }
@@ -365,8 +429,8 @@ public class SentinelGame extends Application {
         board.add(new Knight(false, "1"), 7, 0);
         board.add(new Sentinel(false, "1"), 8, 0);
         board.add(new Rook(false, "1"), 9, 0);
-        for (int i = 0; i < 10; i++) {
-            board.add(new Pawn(false, String.valueOf(i)), i, 1);
+        for (int i = 1; i <= 10; i++) {
+            board.add(new Pawn(false, String.valueOf(i * 10)), i - 1, 1);
         }
 
         board.add(new Rook(true, "0"), 0, 7);
@@ -379,8 +443,8 @@ public class SentinelGame extends Application {
         board.add(new Knight(true, "1"), 7, 7);
         board.add(new Sentinel(true, "1"), 8, 7);
         board.add(new Rook(true, "1"), 9, 7);
-        for (int i = 0; i < 10; i++) {
-            board.add(new Pawn(true, String.valueOf(i)), i, 6);
+        for (int i = 1; i <= 10; i++) {
+            board.add(new Pawn(true, String.valueOf(i * 10)), i - 1, 6);
         }
 
 //        int blankId = 0;
@@ -447,6 +511,15 @@ public class SentinelGame extends Application {
             return;
         }
         removePieceById(selectedPiece.getId());
+
+        switch (selectedPiece.getName()) {
+            case "pawn" -> {
+                if (selectedPiece.getUniqueId().endsWith("0")) {
+                    selectedPiece.updateUniqueId(String.valueOf(Integer.parseInt(selectedPiece.getUniqueId()) / 10));
+                }
+            }
+        }
+
         Piece piece = switch (selectedPiece.getName()) {
             case "pawn" -> new Pawn(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
             case "rook" -> new Rook(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
