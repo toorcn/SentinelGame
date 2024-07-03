@@ -3,6 +3,8 @@ package com.sentinel.apg39;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+import static com.sentinel.apg39.SentinelGame.CELL_SIZE;
+
 public abstract class Piece extends ImageView {
     private boolean isWhite;
 
@@ -10,8 +12,8 @@ public abstract class Piece extends ImageView {
         super(image);
         this.isWhite = isWhite;
         // Set initial fit width and height based on grid cell size
-        setFitWidth(50); // Adjust this value as per your grid cell size
-        setFitHeight(50); // Adjust this value as per your grid cell size
+        setFitWidth(CELL_SIZE); // Adjust this value as per your grid cell size
+        setFitHeight(CELL_SIZE); // Adjust this value as per your grid cell size
         setPreserveRatio(true); // Preserve aspect ratio
         setId((isWhite ? "white" : "black") + "_" + this.getClass().getSimpleName().toLowerCase() + "_" + id);
     }

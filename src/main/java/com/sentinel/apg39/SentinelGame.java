@@ -17,6 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SentinelGame extends Application {
+    private static final int BOARD_ROW_SIZE = 8;
+    private static final int BOARD_COL_SIZE = 10;
+    public static final int CELL_SIZE = 50;
 
     private PieceInfo selectedPiece = null;
     private boolean isWhiteTurn = true;
@@ -28,8 +31,8 @@ public class SentinelGame extends Application {
     int sentinelYpMoveable = -1;
     int sentinelYnMoveable = -1;
 
-    @Override public void start(Stage stage) {
-
+    @Override
+    public void start(Stage stage) {
         Scene scene = new Scene(board, 700, 600);
         scene.setFill(Color.BLACK);
         stage.setScene(scene);
@@ -40,11 +43,11 @@ public class SentinelGame extends Application {
 
 //        check board logic
         board.setOnMouseClicked(event -> {
-            int col = (int) (event.getX() - 100) / 50;
-            int row = (int) (event.getY() - 100) / 50;
+            int col = (int) (event.getX() - 100) / CELL_SIZE;
+            int row = (int) (event.getY() - 100) / CELL_SIZE;
 
-            PieceInfo pieceInfo = getPieceByCordinates(col, row);
-            System.out.println("Clicked on Col: " + col + ", Row: " + row + ", Piece: " + pieceInfo.getId() + ", Name: " + pieceInfo.getName() + ", Side: " + pieceInfo.getIsWhiteString());
+            PieceInfo pieceInfo = getPieceByCoordinate(col, row);
+            System.out.println("Clicked on (" + col + ", " + row + "), Piece: " + pieceInfo.getId() + ", Name: " + pieceInfo.getName() + ", Side: " + pieceInfo.getIsWhiteString());
 
             removeHighlight();
             if (
@@ -66,31 +69,32 @@ public class SentinelGame extends Application {
 
 //                get legal moves
                 String path = "\n";
-                boolean rookXpBlocked = false;
-                boolean rookXnBlocked = false;
-                boolean rookYpBlocked = false;
-                boolean rookYnBlocked = false;
 
-                boolean bishopXpYpBlocked = false;
-                boolean bishopXpYnBlocked = false;
-                boolean bishopXnYpBlocked = false;
-                boolean bishopXnYnBlocked = false;
+                PieceBlocked rookXp = new PieceBlocked();
+                PieceBlocked rookXn = new PieceBlocked();
+                PieceBlocked rookYp = new PieceBlocked();
+                PieceBlocked rookYn = new PieceBlocked();
 
-                boolean queenXpYpBlocked = false;
-                boolean queenXpYnBlocked = false;
-                boolean queenXnYpBlocked = false;
-                boolean queenXnYnBlocked = false;
-                boolean queenXpBlocked = false;
-                boolean queenXnBlocked = false;
-                boolean queenYpBlocked = false;
-                boolean queenYnBlocked = false;
+                PieceBlocked bishopXpYp = new PieceBlocked();
+                PieceBlocked bishopXpYn = new PieceBlocked();
+                PieceBlocked bishopXnYp = new PieceBlocked();
+                PieceBlocked bishopXnYn = new PieceBlocked();
 
-                boolean pawnYBlocked = false;
+                PieceBlocked queenXpYp = new PieceBlocked();
+                PieceBlocked queenXpYn = new PieceBlocked();
+                PieceBlocked queenXnYp = new PieceBlocked();
+                PieceBlocked queenXnYn = new PieceBlocked();
+                PieceBlocked queenXp = new PieceBlocked();
+                PieceBlocked queenXn = new PieceBlocked();
+                PieceBlocked queenYp = new PieceBlocked();
+                PieceBlocked queenYn = new PieceBlocked();
 
-                boolean sentinelXpBlocked = false;
-                boolean sentinelXnBlocked = false;
-                boolean sentinelYpBlocked = false;
-                boolean sentinelYnBlocked = false;
+                PieceBlocked pawnY = new PieceBlocked();
+
+                PieceBlocked sentinelXp = new PieceBlocked();
+                PieceBlocked sentinelXn = new PieceBlocked();
+                PieceBlocked sentinelYp = new PieceBlocked();
+                PieceBlocked sentinelYn = new PieceBlocked();
 
                 sentinelXpMoveable = -1;
                 sentinelYpMoveable = -1;
@@ -100,10 +104,17 @@ public class SentinelGame extends Application {
                 for (int[] move : pieceInfo.getMoves(col, row)) {
                     int moveCol = move[0];
                     int moveRow = move[1];
-                    if (moveCol < 0 || moveCol > 9 || moveRow < 0 || moveRow > 7) continue;
+                    if (moveCol < 0 || moveCol >= BOARD_COL_SIZE || moveRow < 0 || moveRow >= BOARD_ROW_SIZE) continue;
 //                    check if move is valid and block "moveable" from being placed
-                    PieceInfo targetCellPiece = getPieceByCordinates(moveCol, moveRow);
+                    PieceInfo targetCellPiece = getPieceByCoordinate(moveCol, moveRow);
                     path += "- " + targetCellPiece.getName() + " " + moveCol + " " + moveRow + " \n";
+
+                    boolean isRowMove = moveRow == row;
+                    boolean isColMove = moveCol == col;
+                    boolean isMovingUp = moveRow < row;
+                    boolean isMovingDown = moveRow > row;
+                    boolean isMovingRight = moveCol > col;
+                    boolean isMovingLeft = moveCol < col;
 
                     switch (selectedPiece.getName()) {
                         case "king":
@@ -115,213 +126,30 @@ public class SentinelGame extends Application {
                             }
                             break;
                         case "rook":
-                            if (moveCol == col) {
-                                if (moveRow > row) {
-                                    if (rookYpBlocked) {
-                                        break;
-                                    }
-                                    if (targetCellPiece.getName().equals("empty")) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    } else {
-                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                            markMoveableCell(moveCol, moveRow);
-                                        }
-                                        rookYpBlocked = true;
-                                    }
-                                } else {
-                                    if (rookYnBlocked) {
-                                        break;
-                                    }
-                                    if (targetCellPiece.getName().equals("empty")) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    } else {
-                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                            markMoveableCell(moveCol, moveRow);
-                                        }
-                                        rookYnBlocked = true;
-                                    }
-                                }
-                            } else if (moveRow == row) {
-                                if (moveCol > col) {
-                                    if (rookXpBlocked) {
-                                        break;
-                                    }
-                                    if (targetCellPiece.getName().equals("empty")) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    } else {
-                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                            markMoveableCell(moveCol, moveRow);
-                                        }
-                                        rookXpBlocked = true;
-                                    }
-                                } else {
-                                    if (rookXnBlocked) {
-                                        break;
-                                    }
-                                    if (targetCellPiece.getName().equals("empty")) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    } else {
-                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                            markMoveableCell(moveCol, moveRow);
-                                        }
-                                        rookXnBlocked = true;
-                                    }
-                                }
-                            }
+                            markRookMoves(
+                                    pieceInfo, targetCellPiece,
+                                    isColMove, isRowMove, isMovingDown, isMovingRight, isMovingLeft, isMovingUp,
+                                    rookXp, rookXn, rookYp, rookYn
+                            );
                             break;
                         case "bishop":
-                            if (moveCol > col && moveRow > row) {
-                                if (bishopXpYpBlocked) {
-                                    break;
-                                }
-                                if (targetCellPiece.getName().equals("empty")) {
-                                    markMoveableCell(moveCol, moveRow);
-                                } else {
-                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    }
-                                    bishopXpYpBlocked = true;
-                                }
-                            } else if (moveCol > col && moveRow < row) {
-                                if (bishopXpYnBlocked) {
-                                    break;
-                                }
-                                if (targetCellPiece.getName().equals("empty")) {
-                                    markMoveableCell(moveCol, moveRow);
-                                } else {
-                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    }
-                                    bishopXpYnBlocked = true;
-                                }
-                            } else if (moveCol < col && moveRow > row) {
-                                if (bishopXnYpBlocked) {
-                                    break;
-                                }
-                                if (targetCellPiece.getName().equals("empty")) {
-                                    markMoveableCell(moveCol, moveRow);
-                                } else {
-                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    }
-                                    bishopXnYpBlocked = true;
-                                }
-                            } else if (moveCol < col && moveRow < row) {
-                                if (bishopXnYnBlocked) {
-                                    break;
-                                }
-                                if (targetCellPiece.getName().equals("empty")) {
-                                    markMoveableCell(moveCol, moveRow);
-                                } else {
-                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    }
-                                    bishopXnYnBlocked = true;
-                                }
-                            }
+                            markBishopMoves(
+                                    pieceInfo, targetCellPiece,
+                                    isColMove, isRowMove, isMovingDown, isMovingRight, isMovingLeft, isMovingUp,
+                                    bishopXpYp, bishopXpYn, bishopXnYp, bishopXnYn
+                            );
                             break;
                         case "queen":
-                            if (moveCol == col) {
-                                if (moveRow > row) {
-                                    if (queenYpBlocked) {
-                                        break;
-                                    }
-                                    if (targetCellPiece.getName().equals("empty")) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    } else {
-                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                            markMoveableCell(moveCol, moveRow);
-                                        }
-                                        queenYpBlocked = true;
-                                    }
-                                } else {
-                                    if (queenYnBlocked) {
-                                        break;
-                                    }
-                                    if (targetCellPiece.getName().equals("empty")) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    } else {
-                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                            markMoveableCell(moveCol, moveRow);
-                                        }
-                                        queenYnBlocked = true;
-                                    }
-                                }
-                            } else if (moveRow == row) {
-                                if (moveCol > col) {
-                                    if (queenXpBlocked) {
-                                        break;
-                                    }
-                                    if (targetCellPiece.getName().equals("empty")) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    } else {
-                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                            markMoveableCell(moveCol, moveRow);
-                                        }
-                                        queenXpBlocked = true;
-                                    }
-                                } else {
-                                    if (queenXnBlocked) {
-                                        break;
-                                    }
-                                    if (targetCellPiece.getName().equals("empty")) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    } else {
-                                        if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                            markMoveableCell(moveCol, moveRow);
-                                        }
-                                        queenXnBlocked = true;
-                                    }
-                                }
-                            } else if (moveCol > col && moveRow > row) {
-                                if (queenXpYpBlocked) {
-                                    break;
-                                }
-                                if (targetCellPiece.getName().equals("empty")) {
-                                    markMoveableCell(moveCol, moveRow);
-                                } else {
-                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    }
-                                    queenXpYpBlocked = true;
-                                }
-                            } else if (moveCol > col && moveRow < row ) {
-                                if (queenXpYnBlocked) {
-                                    break;
-                                }
-                                if (targetCellPiece.getName().equals("empty")) {
-                                    markMoveableCell(moveCol, moveRow);
-                                } else {
-                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    }
-                                    queenXpYnBlocked = true;
-                                }
-                            } else if (moveCol < col && moveRow > row) {
-                                if (queenXnYpBlocked) {
-                                    break;
-                                }
-                                if (targetCellPiece.getName().equals("empty")) {
-                                    markMoveableCell(moveCol, moveRow);
-                                } else {
-                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    }
-                                    queenXnYpBlocked = true;
-                                }
-                            } else if (moveCol < col && moveRow < row) {
-                                if (queenXnYnBlocked) {
-                                    break;
-                                }
-                                if (targetCellPiece.getName().equals("empty")) {
-                                    markMoveableCell(moveCol, moveRow);
-                                } else {
-                                    if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
-                                        markMoveableCell(moveCol, moveRow);
-                                    }
-                                    queenXnYnBlocked = true;
-                                }
-                            }
+                            markRookMoves(
+                                    pieceInfo, targetCellPiece,
+                                    isColMove, isRowMove, isMovingDown, isMovingRight, isMovingLeft, isMovingUp,
+                                    queenXp, queenXn, queenYp, queenYn
+                            );
+                            markBishopMoves(
+                                    pieceInfo, targetCellPiece,
+                                    isColMove, isRowMove, isMovingDown, isMovingRight, isMovingLeft, isMovingUp,
+                                    queenXpYp, queenXpYn, queenXnYp, queenXnYn
+                            );
                             break;
                         case "pawn":
 //                            pawn is blocked by friendly
@@ -332,12 +160,12 @@ public class SentinelGame extends Application {
                                     targetCellPiece.getIsWhite() == isWhiteTurn
                                 )
                             ) {
-                                pawnYBlocked = true;
+                                pawnY.setIsBlocked(true);
                                 break;
                             }
-//                            pawn is blocked by enemy
+//                            pawn is blocked by enemy, prevent from placing moveable at 2 front
                             if (
-                                pawnYBlocked &&
+                                pawnY.getIsBlocked() &&
                                 selectedPiece.getCol() == moveCol &&
                                 (
                                     selectedPiece.getRow() + 2 == moveRow ||
@@ -347,7 +175,9 @@ public class SentinelGame extends Application {
                                 break;
                             }
 
+//                            Pawn with id that ends with 0 indicates it is it's first move
                             if (selectedPiece.getUniqueId().endsWith("0")) {
+//                              Spawn moveable if forward is empty or forward left or right has enemy piece
                                 if (
                                     moveCol == selectedPiece.getCol() ||
                                     (
@@ -355,32 +185,39 @@ public class SentinelGame extends Application {
                                         targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()
                                     )
                                 ) {
-                                    markMoveableCell(moveCol, moveRow);
-                                }
-                                if (
-                                    moveCol == selectedPiece.getCol() &&
-                                    (
+//                                    Prevent spawning of moveable if forward same col has enemy piece
+                                    if (
+                                        moveCol == selectedPiece.getCol() &&
                                         !targetCellPiece.getName().equals("empty") &&
                                         targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()
-                                    )
+                                    ) {
+                                        pawnY.setIsBlocked(true);
+                                        break;
+                                    }
+                                    markMoveableCell(moveCol, moveRow);
+                                }
+//                                Indicate pawn is blocked if forward path contains enemy piece
+                                if (
+                                    moveCol == selectedPiece.getCol() &&
+                                    !targetCellPiece.getName().equals("empty") &&
+                                    targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()
                                 ) {
-                                    pawnYBlocked = true;
+                                    pawnY.setIsBlocked(true);
                                 }
                             } else {
+//                                Ignore all moveable cell if length is longer than 1
                                 if (
                                     moveRow - selectedPiece.getRow() > 1 ||
                                     moveRow - selectedPiece.getRow() < -1
                                 ) continue;
+//                                Spawn moveable if cell in-front forward is empty
                                 if (moveCol == selectedPiece.getCol()) {
                                     if (targetCellPiece.getName().equals("empty")) {
                                         markMoveableCell(moveCol, moveRow);
-                                    } else {
-                                        break;
                                     }
                                 } else {
-                                    if (targetCellPiece.getName().equals("empty")) {
-                                        break;
-                                    } else {
+//                                    Spawn moveable if forward left or right has enemy piece
+                                    if (!targetCellPiece.getName().equals("empty")) {
                                         if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
                                             markMoveableCell(moveCol, moveRow);
                                         }
@@ -405,15 +242,15 @@ public class SentinelGame extends Application {
 //                            special x and y moves
 
 //                            y axis check
-                            if (moveCol == col) {
-                                if (moveRow > row) {
+                            if (isColMove) {
+                                if (isMovingDown) {
 //                                    checking v direction
                                     if (targetCellPiece.getName().equals("empty")) {
-                                        sentinelYpBlocked = true;
+                                        sentinelYp.setIsBlocked(true);
                                     } else {
                                         if (
                                             moveRow > sentinelYpMoveable &&
-                                            !sentinelYpBlocked
+                                            !sentinelYp.getIsBlocked()
                                         ) {
                                             sentinelYpMoveable = moveRow;
                                         }
@@ -421,35 +258,37 @@ public class SentinelGame extends Application {
                                 } else {
 //                                    checking ^ direction
                                     if (targetCellPiece.getName().equals("empty")) {
-                                        sentinelYnBlocked = true;
+                                        sentinelYn.setIsBlocked(true);
                                     } else {
                                         if (
                                             moveRow < sentinelYnMoveable &&
-                                            !sentinelYnBlocked
+                                            !sentinelYn.getIsBlocked()
                                         ) {
                                             sentinelYnMoveable = moveRow;
                                         }
                                     }
                                 }
-                            } else if (moveRow == row) {
-                                if (moveCol > col) {
+                            } else if (isRowMove) {
+                                if (isMovingRight) {
+//                                    checking > direction
                                     if (targetCellPiece.getName().equals("empty")) {
-                                        sentinelXpBlocked = true;
+                                        sentinelXp.setIsBlocked(true);
                                     } else {
                                         if (
                                             moveCol > sentinelXpMoveable &&
-                                            !sentinelXpBlocked
+                                            !sentinelXp.getIsBlocked()
                                         ) {
                                             sentinelXpMoveable = moveCol;
                                         }
                                     }
                                 } else {
+//                                    checking < direction
                                     if (targetCellPiece.getName().equals("empty")) {
-                                        sentinelXnBlocked = true;
+                                        sentinelXn.setIsBlocked(true);
                                     } else {
                                         if (
                                             moveCol < sentinelXnMoveable &&
-                                            !sentinelXnBlocked
+                                            !sentinelXn.getIsBlocked()
                                         ) {
                                             sentinelXnMoveable = moveCol;
                                         }
@@ -457,36 +296,34 @@ public class SentinelGame extends Application {
                                 }
                             }
                             break;
-
                         default:
                             break;
-//                            markMoveableCell(moveCol, moveRow);
                     }
                 }
 
-//                marking sentinel's x and y furtherest moveable\
+//                marking sentinel's x and y furthest moveable
                 if (selectedPiece.getName().equals("sentinel")) {
                     if (sentinelYpMoveable > -1) {
                         int moveRow = sentinelYpMoveable + 1;
-                        if (!(moveRow < 0 || moveRow > 7)) {
+                        if (!(moveRow < 0 || moveRow >= BOARD_ROW_SIZE)) {
                             markMoveableCell(col, moveRow);
                         }
                     }
                     if (sentinelXpMoveable > -1) {
                         int moveCol = sentinelXpMoveable + 1;
-                        if (!(moveCol < 0 || moveCol > 9)) {
+                        if (!(moveCol < 0 || moveCol >= BOARD_COL_SIZE)) {
                             markMoveableCell(moveCol, row);
                         }
                     }
                     if (sentinelYnMoveable < row) {
                         int moveRow = sentinelYnMoveable - 1;
-                        if (!(moveRow < 0 || moveRow > 7)) {
+                        if (!(moveRow < 0 || moveRow >= BOARD_ROW_SIZE)) {
                             markMoveableCell(col, moveRow);
                         }
                     }
                     if (sentinelXnMoveable < col) {
                         int moveCol = sentinelXnMoveable - 1;
-                        if (!(moveCol < 0 || moveCol > 9)) {
+                        if (!(moveCol < 0 || moveCol >= BOARD_COL_SIZE)) {
                             markMoveableCell(moveCol, row);
                         }
                     }
@@ -494,22 +331,21 @@ public class SentinelGame extends Application {
 
                 System.out.println("move path targetCellPiece: " + path);
             }
-            if (selectedPiece != null && pieceInfo.getName().equals("moveable")) {
-//                check for legal moves
-
+//            If user selected cell is marked "moveable"
+            if (selectedPiece != null && pieceInfo.getName().equals("moveable")) { // || pieceInfo.getName().equals("empty")
 //              capture pieces along sentinel's path
                 if (selectedPiece.getName().equals("sentinel")) {
                     int[][] sentinelYnPath = new int[][]{
-                        {selectedPiece.getCol(), selectedPiece.getRow() - 1}, {selectedPiece.getCol(), selectedPiece.getRow() - 2}, {selectedPiece.getCol(), selectedPiece.getRow() - 3}, {selectedPiece.getCol(), selectedPiece.getRow() - 4}, {selectedPiece.getCol(), selectedPiece.getRow() - 5}, {selectedPiece.getCol(), selectedPiece.getRow() - 6}, {selectedPiece.getCol(), selectedPiece.getRow() - 7}
+                            {selectedPiece.getCol(), selectedPiece.getRow() - 1}, {selectedPiece.getCol(), selectedPiece.getRow() - 2}, {selectedPiece.getCol(), selectedPiece.getRow() - 3}, {selectedPiece.getCol(), selectedPiece.getRow() - 4}, {selectedPiece.getCol(), selectedPiece.getRow() - 5}, {selectedPiece.getCol(), selectedPiece.getRow() - 6}, {selectedPiece.getCol(), selectedPiece.getRow() - 7}
                     };
                     int[][] sentinelYpPath = new int[][]{
-                        {selectedPiece.getCol(), selectedPiece.getRow() + 1}, {selectedPiece.getCol(), selectedPiece.getRow() + 2}, {selectedPiece.getCol(), selectedPiece.getRow() + 3}, {selectedPiece.getCol(), selectedPiece.getRow() + 4}, {selectedPiece.getCol(), selectedPiece.getRow() + 5}, {selectedPiece.getCol(), selectedPiece.getRow() + 6}, {selectedPiece.getCol(), selectedPiece.getRow() + 7}
+                            {selectedPiece.getCol(), selectedPiece.getRow() + 1}, {selectedPiece.getCol(), selectedPiece.getRow() + 2}, {selectedPiece.getCol(), selectedPiece.getRow() + 3}, {selectedPiece.getCol(), selectedPiece.getRow() + 4}, {selectedPiece.getCol(), selectedPiece.getRow() + 5}, {selectedPiece.getCol(), selectedPiece.getRow() + 6}, {selectedPiece.getCol(), selectedPiece.getRow() + 7}
                     };
                     int[][] sentinelXnPath = new int[][]{
-                        {selectedPiece.getCol() - 1, selectedPiece.getRow()}, {selectedPiece.getCol() - 2, selectedPiece.getRow()}, {selectedPiece.getCol() - 3, selectedPiece.getRow()}, {selectedPiece.getCol() - 4, selectedPiece.getRow()}, {selectedPiece.getCol() - 5, selectedPiece.getRow()}, {selectedPiece.getCol() - 6, selectedPiece.getRow()}, {selectedPiece.getCol() - 7, selectedPiece.getRow()}, {selectedPiece.getCol() - 8, selectedPiece.getRow()}, {selectedPiece.getCol() - 9, selectedPiece.getRow()}
+                            {selectedPiece.getCol() - 1, selectedPiece.getRow()}, {selectedPiece.getCol() - 2, selectedPiece.getRow()}, {selectedPiece.getCol() - 3, selectedPiece.getRow()}, {selectedPiece.getCol() - 4, selectedPiece.getRow()}, {selectedPiece.getCol() - 5, selectedPiece.getRow()}, {selectedPiece.getCol() - 6, selectedPiece.getRow()}, {selectedPiece.getCol() - 7, selectedPiece.getRow()}, {selectedPiece.getCol() - 8, selectedPiece.getRow()}, {selectedPiece.getCol() - 9, selectedPiece.getRow()}
                     };
                     int[][] sentinelXpPath = new int[][]{
-                        {selectedPiece.getCol() + 1, selectedPiece.getRow()}, {selectedPiece.getCol() + 2, selectedPiece.getRow()}, {selectedPiece.getCol() + 3, selectedPiece.getRow()}, {selectedPiece.getCol() + 4, selectedPiece.getRow()}, {selectedPiece.getCol() + 5, selectedPiece.getRow()}, {selectedPiece.getCol() + 6, selectedPiece.getRow()}, {selectedPiece.getCol() + 7, selectedPiece.getRow()}, {selectedPiece.getCol() + 8, selectedPiece.getRow()}, {selectedPiece.getCol() + 9, selectedPiece.getRow()}
+                            {selectedPiece.getCol() + 1, selectedPiece.getRow()}, {selectedPiece.getCol() + 2, selectedPiece.getRow()}, {selectedPiece.getCol() + 3, selectedPiece.getRow()}, {selectedPiece.getCol() + 4, selectedPiece.getRow()}, {selectedPiece.getCol() + 5, selectedPiece.getRow()}, {selectedPiece.getCol() + 6, selectedPiece.getRow()}, {selectedPiece.getCol() + 7, selectedPiece.getRow()}, {selectedPiece.getCol() + 8, selectedPiece.getRow()}, {selectedPiece.getCol() + 9, selectedPiece.getRow()}
                     };
 
 //                    get which direction move is made
@@ -520,9 +356,9 @@ public class SentinelGame extends Application {
                             for (int[] move : sentinelYpPath) {
                                 int moveCol = move[0];
                                 int moveRow = move[1];
-                                if (moveRow < 0 || moveRow > 7) continue;
-                                PieceInfo targetCellPiece = getPieceByCordinates(moveCol, moveRow);
+                                if (moveRow < 0 || moveRow >= BOARD_ROW_SIZE) continue;
                                 if (moveRow > sentinelYpMoveable) continue;
+                                PieceInfo targetCellPiece = getPieceByCoordinate(moveCol, moveRow);
                                 if (targetCellPiece.getIsWhite() == selectedPiece.getIsWhite()) continue;
                                 capturePiece(targetCellPiece);
                             }
@@ -531,9 +367,9 @@ public class SentinelGame extends Application {
                             for (int[] move : sentinelYnPath) {
                                 int moveCol = move[0];
                                 int moveRow = move[1];
-                                if (moveRow < 0 || moveRow > 7) continue;
-                                PieceInfo targetCellPiece = getPieceByCordinates(moveCol, moveRow);
+                                if (moveRow < 0 || moveRow >= BOARD_ROW_SIZE) continue;
                                 if (moveRow < sentinelYnMoveable) continue;
+                                PieceInfo targetCellPiece = getPieceByCoordinate(moveCol, moveRow);
                                 if (targetCellPiece.getIsWhite() == selectedPiece.getIsWhite()) continue;
                                 capturePiece(targetCellPiece);
                             }
@@ -545,9 +381,9 @@ public class SentinelGame extends Application {
                             for (int[] move : sentinelXpPath) {
                                 int moveCol = move[0];
                                 int moveRow = move[1];
-                                if (moveCol < 0 || moveCol > 9) continue;
-                                PieceInfo targetCellPiece = getPieceByCordinates(moveCol, moveRow);
+                                if (moveCol < 0 || moveCol >= BOARD_COL_SIZE) continue;
                                 if (moveCol > sentinelXpMoveable) continue;
+                                PieceInfo targetCellPiece = getPieceByCoordinate(moveCol, moveRow);
                                 if (targetCellPiece.getIsWhite() == selectedPiece.getIsWhite()) continue;
                                 capturePiece(targetCellPiece);
                             }
@@ -556,9 +392,9 @@ public class SentinelGame extends Application {
                             for (int[] move : sentinelXnPath) {
                                 int moveCol = move[0];
                                 int moveRow = move[1];
-                                if (moveCol < 0 || moveCol > 9) continue;
-                                PieceInfo targetCellPiece = getPieceByCordinates(moveCol, moveRow);
+                                if (moveCol < 0 || moveCol >= BOARD_COL_SIZE) continue;
                                 if (moveCol < sentinelXnMoveable) continue;
+                                PieceInfo targetCellPiece = getPieceByCoordinate(moveCol, moveRow);
                                 if (targetCellPiece.getIsWhite() == selectedPiece.getIsWhite()) continue;
                                 capturePiece(targetCellPiece);
                             }
@@ -567,11 +403,57 @@ public class SentinelGame extends Application {
                 }
                 movePiece(col, row);
             }
-//            if (selectedPiece != null && (pieceInfo.getName().equals("empty") || pieceInfo.getName().equals("moveable"))) {
-//                movePiece(col, row);
-//            }
         });
+    }
 
+    private void markRookMoves(
+            PieceInfo pieceInfo, PieceInfo targetCellPiece,
+            boolean isColMove, boolean isRowMove, boolean isMovingDown, boolean isMovingRight, boolean isMovingLeft, boolean isMovingUp,
+            PieceBlocked rookXp, PieceBlocked rookXn, PieceBlocked rookYp, PieceBlocked rookYn
+    ) {
+        if(isColMove) {
+            if (isMovingDown) {
+                markNotBlockedMoves(pieceInfo, targetCellPiece, rookYp);
+            } else {
+                markNotBlockedMoves(pieceInfo, targetCellPiece, rookYn);
+            }
+        } else if(isRowMove) {
+            if (isMovingRight) {
+                markNotBlockedMoves(pieceInfo, targetCellPiece, rookXp);
+            } else {
+                markNotBlockedMoves(pieceInfo, targetCellPiece, rookXn);
+            }
+        }
+    }
+
+    private void markBishopMoves(
+            PieceInfo pieceInfo, PieceInfo targetCellPiece,
+            boolean isColMove, boolean isRowMove, boolean isMovingDown, boolean isMovingRight, boolean isMovingLeft, boolean isMovingUp,
+            PieceBlocked bishopXpYp, PieceBlocked bishopXpYn, PieceBlocked bishopXnYp, PieceBlocked bishopXnYn
+    ) {
+        if (isMovingRight && isMovingDown) {
+            markNotBlockedMoves(pieceInfo, targetCellPiece, bishopXpYp);
+        } else if (isMovingRight && isMovingUp) {
+            markNotBlockedMoves(pieceInfo, targetCellPiece, bishopXpYn);
+        } else if (isMovingLeft && isMovingDown) {
+            markNotBlockedMoves(pieceInfo, targetCellPiece, bishopXnYp);
+        } else if (isMovingLeft && isMovingUp) {
+            markNotBlockedMoves(pieceInfo, targetCellPiece, bishopXnYn);
+        }
+    }
+    
+    private void markNotBlockedMoves(PieceInfo pieceInfo, PieceInfo targetCellPiece, PieceBlocked pieceBlocked) {
+        int moveCol = targetCellPiece.getCol();
+        int moveRow = targetCellPiece.getRow();
+        if (pieceBlocked.getIsBlocked()) return;
+        if (targetCellPiece.getName().equals("empty")) {
+            markMoveableCell(moveCol, moveRow);
+        } else {
+            if (targetCellPiece.getIsWhite() != pieceInfo.getIsWhite()) {
+                markMoveableCell(moveCol, moveRow);
+            }
+            pieceBlocked.setIsBlocked(true);
+        }
     }
 
     public static void main(String[] args) { launch(args); }
@@ -583,10 +465,10 @@ public class SentinelGame extends Application {
         board.setPadding(new Insets(10));
 
 // Create squares and add them to the board
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 10; col++) {
+        for (int row = 0; row < BOARD_ROW_SIZE; row++) {
+            for (int col = 0; col < BOARD_COL_SIZE; col++) {
                 Pane square = new Pane();
-                square.setPrefSize(50, 50);
+                square.setPrefSize(CELL_SIZE, CELL_SIZE);
                 square.setStyle((row + col) % 2 == 0 ? "-fx-background-color: #5d4037;" : "-fx-background-color: #795548;");
                 board.add(square, col, row);
             }
@@ -605,9 +487,10 @@ public class SentinelGame extends Application {
         board.add(new Knight(false, "1"), 7, 0);
         board.add(new Sentinel(false, "1"), 8, 0);
         board.add(new Rook(false, "1"), 9, 0);
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 9; i++) {
             board.add(new Pawn(false, String.valueOf(i * 10)), i - 1, 1);
         }
+        board.add(new Pawn(false, String.valueOf(110)), 9, 1);
 
         board.add(new Rook(true, "0"), 0, 7);
         board.add(new Sentinel(true, "0"), 1, 7);
@@ -619,22 +502,23 @@ public class SentinelGame extends Application {
         board.add(new Knight(true, "1"), 7, 7);
         board.add(new Sentinel(true, "1"), 8, 7);
         board.add(new Rook(true, "1"), 9, 7);
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 9; i++) {
             board.add(new Pawn(true, String.valueOf(i * 10)), i - 1, 6);
         }
+        board.add(new Pawn(true, String.valueOf(110)), 9, 6);
     }
 
-    private PieceInfo getPieceByCordinates(int col, int row) {
+    private PieceInfo getPieceByCoordinate(int col, int row) {
         PieceInfo pieceInfo = new PieceInfo();
         board.getChildren().forEach(node -> {
             if (GridPane.getColumnIndex(node) == col && GridPane.getRowIndex(node) == row) {
                 if (!node.getClass().getSimpleName().equals("Pane")) {
                     pieceInfo.parseId(node.getId());
-                    pieceInfo.setCol(col);
-                    pieceInfo.setRow(row);
                 }
             }
         });
+        pieceInfo.setCol(col);
+        pieceInfo.setRow(row);
         return pieceInfo;
     }
 
@@ -650,24 +534,23 @@ public class SentinelGame extends Application {
     }
 
     private void capturePiece(PieceInfo targetCellPiece) {
-        if (!targetCellPiece.getName().equals("empty")) {
-            System.out.println("Capture piece: " + targetCellPiece.getId());
-            removePieceById(targetCellPiece.getId());
-        }
+        if (targetCellPiece.getName().equals("empty")) return;
+        System.out.println("Captured piece: " + targetCellPiece.getId());
+        removePieceById(targetCellPiece.getId());
     }
 
     private void movePiece(int col, int row) {
         if (selectedPiece == null) {
-            System.out.println("No piece selected");
+            System.out.println("No piece selected, move action cancelled.");
             return;
         }
-        System.out.println("Moving piece: " + selectedPiece.getName() + " from col: " + selectedPiece.getCol() + ", row: " + selectedPiece.getRow() + " to col: " + col + ", row: " + row);
-        PieceInfo targetCellPiece = getPieceByCordinates(col, row);
+        System.out.println("Moving piece: " + selectedPiece.getId() + " from (" + selectedPiece.getCol() + ", " + selectedPiece.getRow() + ") to (" + col + ", " + row + ")");
+        PieceInfo targetCellPiece = getPieceByCoordinate(col, row);
         if (
             targetCellPiece.getName().equals("empty") ||
             targetCellPiece.getIsWhite() != selectedPiece.getIsWhite()
         ) {
-//        if piece is captureable, remove it
+//        if piece is capture-able, remove it
             capturePiece(targetCellPiece);
         } else {
             return;
@@ -706,8 +589,8 @@ public class SentinelGame extends Application {
         Rectangle highlight = new Rectangle();
         String uniqueId = String.valueOf(System.currentTimeMillis());
         highlight.setId("none_highlight_" + uniqueId); // set an ID for the Rectangle
-        highlight.setWidth(50); // match the cell size
-        highlight.setHeight(50); // match the cell size
+        highlight.setWidth(CELL_SIZE); // match the cell size
+        highlight.setHeight(CELL_SIZE); // match the cell size
         highlight.setFill(Color.YELLOW);
         highlight.setOpacity(0.2); // semi-transparent
 
@@ -740,12 +623,5 @@ public class SentinelGame extends Application {
             }
         });
         board.getChildren().removeAll(nodesToRemove);
-    }
-
-    public static int[][] append(int[][] a, int[][] b) {
-        int[][] result = new int[a.length + b.length][];
-        System.arraycopy(a, 0, result, 0, a.length);
-        System.arraycopy(b, 0, result, a.length, b.length);
-        return result;
     }
 }
