@@ -14,11 +14,6 @@ public abstract class Piece extends ImageView {
         setFitHeight(50); // Adjust this value as per your grid cell size
         setPreserveRatio(true); // Preserve aspect ratio
         setId((isWhite ? "white" : "black") + "_" + this.getClass().getSimpleName().toLowerCase() + "_" + id);
-
-    }
-
-    public boolean isWhite() {
-        return isWhite;
     }
 }
 
@@ -26,10 +21,6 @@ class Pawn extends Piece {
     public Pawn(boolean isWhite, String id) {
         super(isWhite, id, new Image("file:src/main/resources/images/piece_" + (isWhite ? "white" : "black") + "_pawn.png"));
     }
-
-//    boolean getLegalMoves(int col, int row) {
-//
-//    }
 }
 
 class Rook extends Piece {

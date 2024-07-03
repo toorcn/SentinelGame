@@ -4,16 +4,12 @@ class PieceInfo {
     private String name;
     private boolean isWhite;
     private String id;
+    private int col;
+    private int row;
 
     public PieceInfo() {
         this.id = null;
         this.name = "empty";
-    }
-
-    public PieceInfo(String id) {
-        this.id = id;
-        this.name = id.split("_")[1];
-        this.isWhite = id.split("_")[0].equals("white");
     }
 
     public void parseId(String id) {
@@ -40,6 +36,22 @@ class PieceInfo {
 
     public String getUniqueId() {
         return id.split("_")[2];
+    }
+
+    public int getCol() {
+        return col;
+    }
+
+    public int getRow() {
+        return row;
+    }
+
+    public void setCol(int col) {
+        this.col = col;
+    }
+
+    public void setRow(int row) {
+        this.row = row;
     }
 
     public void updateUniqueId(String newId) {
