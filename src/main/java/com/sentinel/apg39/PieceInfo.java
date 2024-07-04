@@ -35,7 +35,15 @@ class PieceInfo {
     }
 
     public String getUniqueId() {
+        if (id == null) {
+            return null;
+        }
         return id.split("_")[2];
+    }
+
+    public boolean hasNotMoved() {
+        if (id == null) return false;
+        return getUniqueId().endsWith("0");
     }
 
     public int getCol() {
@@ -56,6 +64,46 @@ class PieceInfo {
 
     public void updateUniqueId(String newId) {
         this.id = id.split("_")[0] + "_" + id.split("_")[1] + "_" + newId;
+    }
+
+    public boolean isUnoccupied() {
+        return name.equals("empty");
+//        if (name.equals("empty") || name.equals("moveable")) {
+//            return true;
+//        }
+//        return false;
+    }
+
+    public boolean isMoveable() {
+        return name.equals("moveable");
+    }
+
+    public boolean isPawn() {
+        return name.equals("pawn");
+    }
+
+    public boolean isKing() {
+        return name.equals("king");
+    }
+
+    public boolean isQueen() {
+        return name.equals("queen");
+    }
+
+    public boolean isRook() {
+        return name.equals("rook");
+    }
+
+    public boolean isBishop() {
+        return name.equals("bishop");
+    }
+
+    public boolean isKnight() {
+        return name.equals("knight");
+    }
+
+    public boolean isSentinel() {
+        return name.equals("sentinel");
     }
 
     public int[][] getMoves(int col, int row) {
