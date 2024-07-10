@@ -5,12 +5,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -19,6 +18,8 @@ import java.util.List;
 public class SentinelGame extends Application {
     private static final int BOARD_ROW_SIZE = 8;
     private static final int BOARD_COL_SIZE = 10;
+    private static final int BOARD_WIDTH = 900;
+    private static final int BOARD_HEIGHT = 600;
     public static final int CELL_SIZE = 50;
 
     private PieceInfo selectedPiece = null;
@@ -30,6 +31,8 @@ public class SentinelGame extends Application {
     public boolean isBlackChecked = false;
 
     GridPane board = getGameBoard();
+    HBox whiteCapturedDisplay = new HBox();
+    HBox blackCapturedDisplay = new HBox();
 
     int sentinelXpMoveable = -1;
     int sentinelXnMoveable = -1;
@@ -38,8 +41,58 @@ public class SentinelGame extends Application {
 
     @Override
     public void start(Stage stage) {
-        Scene scene = new Scene(board, 700, 600);
-        scene.setFill(Color.BLACK);
+        Text whiteCapturedText = new Text("White Captured");
+        whiteCapturedText.setFill(Color.BLACK);
+
+        Text blackCapturedText = new Text("Black Captured");
+        blackCapturedText.setFill(Color.WHITE);
+
+        Rectangle saveRec = new Rectangle(CELL_SIZE, CELL_SIZE);
+        saveRec.setFill(Color.GREEN);
+        saveRec.setOnMouseClicked(event -> {
+            System.out.println("Save button clicked");
+            GameSave gameSave = new GameSave(board, whiteCaptured, blackCaptured, isWhiteTurn);
+            gameSave.saveGame();
+        });
+
+        Rectangle loadSaveRec = new Rectangle(CELL_SIZE, CELL_SIZE);
+        loadSaveRec.setFill(Color.BLUE);
+        loadSaveRec.setOnMouseClicked(event -> {
+            System.out.println("Load button clicked");
+            GameSave gameSave = new GameSave(board, whiteCaptured, blackCaptured, isWhiteTurn);
+            board.getChildren().removeIf(node -> node instanceof Piece);
+            gameSave.loadGame();
+            isWhiteTurn = gameSave.getPlayingSide();
+
+            updateCapturedPiecesDisplay();
+        });
+
+        HBox saveBox = new HBox();
+        saveBox.getChildren().addAll(saveRec, loadSaveRec);
+        saveBox.setAlignment(Pos.TOP_LEFT);
+        saveBox.setPadding(new Insets(10));
+//        saveBox.prefHeight(25);
+//        saveBox.maxHeight(25);
+//        saveBox.setStyle("-fx-background-color: #f0f0f0;");
+
+//        whiteCapturedDisplay.prefHeight(25);
+//        blackCapturedDisplay.prefHeight(25);
+
+        VBox capturedPanelComponent = new VBox();
+//        capturedPanelComponent.setAlignment(Pos.CENTER_RIGHT);
+//        capturedPanelComponent.prefHeight(50);
+        VBox.setMargin(capturedPanelComponent, new Insets(50));
+//        capturedPanelComponent.setStyle("-fx-background-color: #f0f0f0;");
+        capturedPanelComponent.getChildren().addAll(whiteCapturedText, whiteCapturedDisplay, blackCapturedText, blackCapturedDisplay);
+
+        VBox sidePanel = new VBox();
+        sidePanel.getChildren().addAll(saveBox, capturedPanelComponent);
+
+        HBox hBox = new HBox();
+        hBox.getChildren().addAll(board, sidePanel);
+
+        Scene scene = new Scene(hBox, BOARD_WIDTH, BOARD_HEIGHT);
+        scene.setFill(Color.GRAY);
         stage.setScene(scene);
         stage.show();
 
@@ -48,8 +101,8 @@ public class SentinelGame extends Application {
 
 //        check board logic
         board.setOnMouseClicked(event -> {
-            int col = (int) (event.getX() - 100) / CELL_SIZE;
-            int row = (int) (event.getY() - 100) / CELL_SIZE;
+            int col = (int) (event.getX() - 25) / CELL_SIZE;
+            int row = (int) (event.getY() - 175) / CELL_SIZE;
 
             onBoardClick(col, row);
         });
@@ -511,7 +564,7 @@ public class SentinelGame extends Application {
             markNotBlockedMoves(pieceInfo, targetCellPiece, bishopXnYn);
         }
     }
-    
+
     private void markNotBlockedMoves(PieceInfo pieceInfo, PieceInfo targetCellPiece, PieceBlocked pieceBlocked) {
         int moveCol = targetCellPiece.getCol();
         int moveRow = targetCellPiece.getRow();
@@ -531,8 +584,9 @@ public class SentinelGame extends Application {
     private static GridPane getGameBoard() {
 //        Chessboard
         GridPane board = new GridPane();
-        board.setAlignment(Pos.CENTER);
-        board.setPadding(new Insets(10));
+//        board.setAlignment(Pos.CENTER);
+        board.setAlignment(Pos.BOTTOM_LEFT);
+        board.setPadding(new Insets(25));
 
 // Create squares and add them to the board
         for (int row = 0; row < BOARD_ROW_SIZE; row++) {
@@ -639,20 +693,75 @@ public class SentinelGame extends Application {
             }
         }
 
-//        display all captured pieces
+        updateCapturedPiecesDisplay();
+    }
+
+    private void updateCapturedPiecesDisplay() {
+        //        display all captured pieces
+        whiteCapturedDisplay.getChildren().clear();
+        blackCapturedDisplay.getChildren().clear();
         String whiteCapturedPieces = "";
+        int whiteCapturedIndex = 1;
+        int whiteCapturedCount = 0;
         for (PieceInfo piece : whiteCaptured) {
             if (piece == null) continue;
+            whiteCapturedCount += 1;
             whiteCapturedPieces += piece.getId() + ", ";
+
+            if (whiteCapturedIndex > 3) {
+                continue;
+            }
+
+            Piece sidePanelPiece = getPieceByName(piece);
+            whiteCapturedDisplay.getChildren().add(sidePanelPiece);
+
+            whiteCapturedIndex++;
         }
         System.out.println("White captured: " + whiteCapturedPieces);
-        
+        if (whiteCapturedCount > 3) {
+            for (Node node : whiteCapturedDisplay.getChildren()) {
+                if (node.getId() == null) continue;
+                if (node.getId().equals("white_captured_text")) {
+                    whiteCapturedDisplay.getChildren().remove(node);
+                    break;
+                }
+            }
+            Text whiteCapturedText = new Text(" +" + (whiteCapturedCount - 3) + " more");
+            whiteCapturedText.setId("white_captured_text");
+            whiteCapturedDisplay.getChildren().add(whiteCapturedText);
+        }
+
         String blackCapturedPieces = "";
+        int blackCapturedIndex = 1;
+        int blackCapturedCount = 0;
         for (PieceInfo piece : blackCaptured) {
             if (piece == null) continue;
+            blackCapturedCount += 1;
             blackCapturedPieces += piece.getId() + ", ";
+
+            if (blackCapturedIndex > 3) {
+                continue;
+            }
+
+            Piece sidePanelPiece = getPieceByName(piece);
+            blackCapturedDisplay.getChildren().add(sidePanelPiece);
+
+            blackCapturedIndex++;
         }
         System.out.println("Black captured: " + blackCapturedPieces);
+        if (blackCapturedCount > 3) {
+            for (Node node : blackCapturedDisplay.getChildren()) {
+                if (node.getId() == null) continue;
+                System.out.println("bccd: " + node.getId());
+                if (node.getId().equals("black_captured_text")) {
+                    blackCapturedDisplay.getChildren().remove(node);
+                    break;
+                }
+            }
+            Text blackCapturedText = new Text(" +" + (blackCapturedCount - 3) + " more");
+            blackCapturedText.setId("black_captured_text");
+            blackCapturedDisplay.getChildren().add(blackCapturedText);
+        }
     }
 
     private void movePiece(int col, int row) {
@@ -676,17 +785,7 @@ public class SentinelGame extends Application {
         markPieceMoved(selectedPiece);
 
 //        Create a new piece and add it to the board
-        Piece piece = switch (selectedPiece.getName()) {
-            case "pawn" -> new Pawn(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
-            case "rook" -> new Rook(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
-            case "knight" -> new Knight(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
-            case "bishop" -> new Bishop(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
-            case "queen" -> new Queen(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
-            case "king" -> new King(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
-            case "sentinel" -> new Sentinel(selectedPiece.getIsWhite(), selectedPiece.getUniqueId());
-            default -> null;
-        };
-
+        Piece piece = getPieceByName(selectedPiece);
         board.add(piece, col, row);
 
         selectedPiece = null;
@@ -695,6 +794,19 @@ public class SentinelGame extends Application {
 
         PieceInfo newPiece = getPieceByCoordinate(col, row);
         checkIsChecked(newPiece);
+    }
+
+    public Piece getPieceByName(PieceInfo piece) {
+        return switch (piece.getName()) {
+            case "pawn" -> new Pawn(piece.getIsWhite(), piece.getUniqueId());
+            case "rook" -> new Rook(piece.getIsWhite(), piece.getUniqueId());
+            case "knight" -> new Knight(piece.getIsWhite(), piece.getUniqueId());
+            case "bishop" -> new Bishop(piece.getIsWhite(), piece.getUniqueId());
+            case "queen" -> new Queen(piece.getIsWhite(), piece.getUniqueId());
+            case "king" -> new King(piece.getIsWhite(), piece.getUniqueId());
+            case "sentinel" -> new Sentinel(piece.getIsWhite(), piece.getUniqueId());
+            default -> null;
+        };
     }
 
     private void checkIsChecked(PieceInfo piece) {
@@ -778,19 +890,5 @@ public class SentinelGame extends Application {
         });
 
         board.getChildren().removeAll(nodesToRemove);
-
-//        Platform.runLater(()-> {
-//            board.requestFocus();
-//        });
-//        board.getScene().getWindow().setWidth(board.getScene().getWidth() + 0.0001);
-//        try {
-//            Thread.sleep(1000);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//        board.getScene().getWindow().setWidth(board.getScene().getWidth() - 0.1);
-//        Platform.runLater(() -> {
-//            board.getScene().getWindow().setWidth(board.getScene().getWidth() + 0.001);
-//        });
     }
 }
