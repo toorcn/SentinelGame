@@ -68,10 +68,10 @@ class PieceInfo {
 
     public boolean isUnoccupied() {
         return name.equals("empty");
-//        if (name.equals("empty") || name.equals("moveable")) {
-//            return true;
-//        }
-//        return false;
+    }
+
+    public boolean isUnoccupiedOrMoveable() {
+        return name.equals("empty") || name.equals("moveable");
     }
 
     public boolean isMoveable() {
