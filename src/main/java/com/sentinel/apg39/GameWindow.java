@@ -3,11 +3,13 @@ package com.sentinel.apg39;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ListView;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
@@ -53,17 +55,18 @@ public class GameWindow {
 
 //        Resign Button
         StackPane resignButton = new StackPane();
-        resignButton.setAlignment(Pos.CENTER);
+        resignButton.setAlignment(Pos.TOP_LEFT);
+        Image resignImg = new Image("file:src/main/resources/button-imgs/ResignButton.png");
         Rectangle resignRec = new Rectangle(100, 35);
-        resignRec.setFill(Color.RED);
+        resignRec.setFill(new ImagePattern(resignImg));
         StackPane.setMargin(resignRec, new Insets(10, 0, 10, 0));
-        Text resignText = new Text("Resign");
-        resignText.setFill(Color.WHITE);
+
         resignButton.setOnMouseClicked(event -> {
             System.out.println("Resign button clicked");
         });
+//
+        resignButton.getChildren().addAll(resignRec);
 
-        resignButton.getChildren().addAll(resignRec, resignText);
         mainPanel.getChildren().add(resignButton);
 
         HBox.setMargin(mainPanel, new Insets(0, WINDOW_MARGIN, 0, WINDOW_MARGIN));
@@ -80,7 +83,8 @@ public class GameWindow {
 
 //        Pause button
         Rectangle pauseRec = new Rectangle(35, 35);
-        pauseRec.setFill(Color.GREENYELLOW);
+        Image pauseImg = new Image("file:src/main/resources/button-imgs/PauseButton.png");
+        pauseRec.setFill(new ImagePattern(pauseImg));
         pauseRec.setOnMouseClicked(event -> {
             System.out.println("pause button clicked");
         });
@@ -91,6 +95,8 @@ public class GameWindow {
         VBox mainPanel = new VBox();
         mainPanel.setAlignment(Pos.CENTER);
         mainPanel.setPrefWidth(275);
+        mainPanel.setPrefHeight(440);
+
         VBox.setMargin(mainPanel, new Insets(PANEL_VERTICAL_MARGIN - sidePanel.getHeight(), 0, PANEL_VERTICAL_MARGIN, 0));
 
         mainPanel.setStyle("-fx-border-width: 1; -fx-border-color: black;");
@@ -98,20 +104,18 @@ public class GameWindow {
 //        White captured label
         StackPane whiteCapturedLabel = new StackPane();
         Rectangle whiteCapturedRec = new Rectangle(100, 25);
-        whiteCapturedRec.setFill(Color.WHITE);
-        Text whiteCapturedText = new Text("White Captured");
-        whiteCapturedText.setFill(Color.BLACK);
-        whiteCapturedLabel.getChildren().addAll(whiteCapturedRec, whiteCapturedText);
+        Image whiteCapturedImg = new Image("file:src/main/resources/images/WhiteCapturedText.png");
+        whiteCapturedRec.setFill(new ImagePattern(whiteCapturedImg));
+        whiteCapturedLabel.getChildren().add(whiteCapturedRec);
 
 //        Black captured label
         StackPane blackCapturedLabel = new StackPane();
         Rectangle blackCapturedRec = new Rectangle(100, 25);
-        blackCapturedRec.setFill(Color.BLACK);
-        Text blackCapturedText = new Text("Black Captured");
-        blackCapturedText.setFill(Color.WHITE);
-        blackCapturedLabel.getChildren().addAll(blackCapturedRec, blackCapturedText);
+        Image blackCapturedImg = new Image("file:src/main/resources/images/BlackCapturedText.png");
+        blackCapturedRec.setFill(new ImagePattern(blackCapturedImg));
+        blackCapturedLabel.getChildren().add(blackCapturedRec);
 
-//        Center text box
+//        main Content box
         VBox moveContent = new VBox();
         moveContent.setStyle("-fx-border-width: 1; -fx-border-color: black;");
         moveContent.setPrefHeight(CENTER_BOX_HEIGHT);
@@ -121,7 +125,7 @@ public class GameWindow {
         HBox h2 = new HBox();
         Text gameInfo = new Text("Game Info");
         gameInfo.setFill(Color.WHITE);
-        h2.setPadding(new Insets(5, 0, 5, 0));
+        h2.setPadding(new Insets(5, 0, 5, 10));
         h2.getChildren().addAll(gameInfo);
 
         moveContent.getChildren().addAll(h2, moveHistoryListView);
@@ -138,6 +142,7 @@ public class GameWindow {
 
 
         mainPanel.getChildren().addAll(whiteCapturedDisplay, moveContent, blackCapturedDisplay);
+        mainPanel.setStyle("-fx-background-color: #5B3E35; -fx-border-radius: 5px; -fx-background-radius: 5px; -fx-padding: 10px;");
 
         sidePanel.getChildren().add(mainPanel);
 

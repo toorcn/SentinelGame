@@ -26,7 +26,7 @@ public class SentinelGame extends Application {
     public static final int WINDOW_MARGIN = 25;
 
     public List<String> moveHistory = new ArrayList<>();
-    public ListView<String> moveHistoryListView = new ListView<String>();
+    public ListView<String> moveHistoryListView = new ListView<>();
 
     private PieceInfo selectedPiece = null;
     private boolean isWhiteTurn = true;
@@ -88,7 +88,7 @@ public class SentinelGame extends Application {
         HBox window = new HBox();
         GameWindow gw = new GameWindow(board, moveHistoryListView, whiteCapturedPieceDisplay, blackCapturedPieceDisplay);
         window.getChildren().addAll(gw.leftWindowPanel(), gw.rightWindowPanel());
-        window.setStyle("-fx-background-color: grey;");
+        window.setStyle("-fx-background-image: url('file:src/main/resources/images/DarkBg.png');");
 
         Scene scene = new Scene(window, WINDOW_WIDTH, WINDOW_HEIGHT);
         stage.setScene(scene);
@@ -215,7 +215,7 @@ public class SentinelGame extends Application {
                 selectedPiece = tmpKingPiece;
             }
 
-            moveHistoryListView.getItems().add(0, "Moved " + selectedPiece.getName() + " from (" + selectedPiece.getCol() + ", " + selectedPiece.getRow() + ") to (" + col + ", " + row + ")");
+            moveHistoryListView.getItems().add(0, "Moved " + selectedPiece.getIsWhiteString() + " " + selectedPiece.getName() + " from (" + selectedPiece.getCol() + ", " + selectedPiece.getRow() + ") to (" + col + ", " + row + ")");
 
             movePiece(col, row);
             isWhiteTurn = !isWhiteTurn;
@@ -714,7 +714,9 @@ public class SentinelGame extends Application {
         String whiteCapturedPieces = "";
         int whiteCapturedIndex = 1;
         int whiteCapturedCount = 0;
-        for (PieceInfo piece : whiteCaptured) {
+//        start looping from the back of the array
+        for (int i = whiteCaptured.length - 1; i >= 0; i--) {
+            PieceInfo piece = whiteCaptured[i];
             if (piece == null) continue;
             whiteCapturedCount += 1;
             whiteCapturedPieces += piece.getId() + ", ";
@@ -745,7 +747,9 @@ public class SentinelGame extends Application {
         String blackCapturedPieces = "";
         int blackCapturedIndex = 1;
         int blackCapturedCount = 0;
-        for (PieceInfo piece : blackCaptured) {
+//        start looping from the back of the array
+        for (int i = blackCaptured.length - 1; i >= 0; i--) {
+            PieceInfo piece = blackCaptured[i];
             if (piece == null) continue;
             blackCapturedCount += 1;
             blackCapturedPieces += piece.getId() + ", ";
