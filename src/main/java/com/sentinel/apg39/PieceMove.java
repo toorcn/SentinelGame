@@ -5,6 +5,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PieceMove {
     private GridPane board;
 
@@ -33,6 +36,8 @@ public class PieceMove {
     int sentinelXnMoveable;
     int sentinelYnMoveable;
 
+    List<List<Integer>> pathToKing = new ArrayList<>();
+
     public PieceMove(
             GridPane board, PieceInfo pieceInfo, PieceInfo targetCellPiece, boolean isWhiteTurn,
             int col, int row, int moveCol, int moveRow
@@ -58,6 +63,15 @@ public class PieceMove {
         String kingSideRookId = pieceInfo.getIsWhite() ? "white_rook_20" : "black_rook_20";
         queenSideRook = getPieceById(queenSideRookId);
         kingSideRook = getPieceById(kingSideRookId);
+    }
+
+    public PieceMove(
+            GridPane board, PieceInfo pieceInfo, PieceInfo targetCellPiece, boolean isWhiteTurn,
+            int col, int row, int moveCol, int moveRow,
+            List<List<Integer>> pathToKing
+    ) {
+        this(board, pieceInfo, targetCellPiece, isWhiteTurn, col, row, moveCol, moveRow);
+        this.pathToKing = pathToKing;
     }
 
     private PieceInfo getPieceByCoordinate(int col, int row) {
@@ -91,6 +105,51 @@ public class PieceMove {
 
     private void markMoveableCell(int col, int row) {
         if (getPieceByCoordinate(col, row).isMoveable()) return;
+        if (this.pieceInfo.isKing()) {
+            markMoveableCell(col, row, true);
+            return;
+        }
+        if (!pathToKing.isEmpty()) {
+            boolean flag = true;
+            for (List<Integer> path : pathToKing) {
+                int pathCol = path.get(0);
+                int pathRow = path.get(1);
+
+                if (pathCol == col && pathRow == row) {
+                    System.out.println("Legal blocking move: " + col + ", " + row);
+                    flag = false;
+                    break;
+                }
+            }
+            if (flag) return;
+        }
+        Circle circle = new Circle();
+        String uniqueId = String.valueOf(System.currentTimeMillis());
+        circle.setId("none_moveable_" + uniqueId); // set an ID for the Rectangle
+        circle.setRadius(15);
+        circle.setFill(Color.BLUE);
+        circle.setOpacity(0.2);
+
+        StackPane stackPane = new StackPane(circle);
+        String uniqueId2 = String.valueOf(System.currentTimeMillis());
+        stackPane.setId("none_moveable_" + uniqueId2);
+        board.add(stackPane, col, row);
+    }
+
+    private void markMoveableCell(int col, int row, boolean king) {
+        if (king) {
+            boolean flag = false;
+            for (List<Integer> path : pathToKing) {
+                int pathCol = path.get(0);
+                int pathRow = path.get(1);
+
+                if (pathCol == col && pathRow == row) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag) return;
+        }
         Circle circle = new Circle();
         String uniqueId = String.valueOf(System.currentTimeMillis());
         circle.setId("none_moveable_" + uniqueId); // set an ID for the Rectangle
@@ -172,7 +231,6 @@ public class PieceMove {
                     getPieceByCoordinate(2, targetCellPiece.getRow()).isUnoccupiedOrMoveable() &&
                     getPieceByCoordinate(1, targetCellPiece.getRow()).isUnoccupiedOrMoveable()
                 ) {
-//                                    (TODO) check if path King x+1&x+2 or x-1&x-2 is clear from enemy checking path
 //                                     mark moveable at x+2 or x-2
                     markMoveableCell(3, targetCellPiece.getRow());
                 }
@@ -184,7 +242,6 @@ public class PieceMove {
                     getPieceByCoordinate(7, targetCellPiece.getRow()).isUnoccupiedOrMoveable() &&
                     getPieceByCoordinate(8, targetCellPiece.getRow()).isUnoccupiedOrMoveable()
                 ) {
-//                                    (TODO) check if path King x+1&x+2 or x-1&x-2 is clear from enemy checking path
 //                                     mark moveable at x+2 or x-2
                     markMoveableCell(7, targetCellPiece.getRow());
                 }
